@@ -7,40 +7,45 @@ import random
 
 load_dotenv()
 
+GUILDS_ID = [
+    discord.Object(id=1066207532374294558), #test guild
+    discord.Object(id=1354771751527256115)
+]
+
+TEST_GUILDS_ID = discord.Object(id=1066207532374294558)
+
 class Client(commands.Bot):
     async def on_ready(self):
         print(f'Logged on as {self.user}!')
         
         try:
-            guild = discord.Object(id=1066207532374294558) # test guild
-            synced = await self.tree.sync(guild=guild)
-            print(f'Synced {len(synced)} commands to guild {guild.id}')
+            for guild in GUILDS_ID:
+                synced = await self.tree.sync(guild=guild)
+                print(f'Synced {len(synced)} commands to guild {guild.id}')
             
         except Exception as e:
             print(f'Error syncing commands: {e}')
     
-    async def on_message(self, message):
-        if message.author == self.user:
-            return
-        if message.content.startswith('hello'):
-            await message.channel.send(f'Hi there {message.author}')
+    # async def on_message(self, message):
+    #     if message.author == self.user:
+    #         return
+    #     if message.content.startswith('hello'):
+    #         await message.channel.send(f'Hi there {message.author}')
     
-    async def on_reaction_add(self, reaction, user):
-        await reaction.message.channel.send('You reacted!')
+    # async def on_reaction_add(self, reaction, user):
+    #     await reaction.message.channel.send('You reacted!')
 
 intents = discord.Intents.default()
 intents.message_content = True
 client = Client(command_prefix="!", intents=intents)
 
 
-TEST_GUILDS_ID = discord.Object(id=1066207532374294558)
-
 commands_list = [
     r"`\info` - Information about the bot",
     r"`\roll` - Roll dices"
 ]
 
-@client.tree.command(name="info", description="Information about the bot", guild=TEST_GUILDS_ID)
+@client.tree.command(name="info", description="Information about the bot", guilds=GUILDS_ID)
 async def mathBot(interaction: discord.Interaction):
     embed = discord.Embed(title="Hi! I am Math Bot!", description="A version 2.0 of a bot developed by _HDH", color=discord.Colour.blue());
     embed.add_field(name="List of commands", value="\n".join(commands_list))
@@ -57,12 +62,12 @@ class DiceRerollButton(discord.ui.View):
         self.amount = amount
         self.sides = sides
         self.reroll_count = 0
-    @discord.ui.button(label="Click me!", style=discord.ButtonStyle.red, emoji="🎲")
+    @discord.ui.button(label="Reroll!", style=discord.ButtonStyle.red, emoji="🎲")
     async def reroll(self, interaction: discord.Interaction, button: discord.ui.Button):
         rolls = [random.randint(1, self.sides) for _ in range(self.amount)]
         total = sum(rolls)
         faces = " ".join(dice_faces[r] if self.sides <= 6 and r <= 6 else str(r) for r in rolls)
-        embed = discord.Embed(title="🎲 Let roll some dices!", color=discord.Colour.blue())
+        embed = discord.Embed(title=f"🎲 Let roll {self.amount} (1-{self.sides})dices!", color=discord.Colour.blue())
         embed.add_field(name="Results", value=faces)
         embed.add_field(name="Total", value=str(total))
         self.reroll_count += 1
@@ -70,7 +75,7 @@ class DiceRerollButton(discord.ui.View):
         await interaction.response.edit_message(embed=embed, view=self)
         # await interaction.response.send_message(f" {self.amount}, {self.sides}", embed=embed)
 
-@client.tree.command(name="roll", description="Roll dices", guild=TEST_GUILDS_ID)
+@client.tree.command(name="roll", description="Roll dices", guilds=GUILDS_ID)
 @app_commands.describe(amount="Number of dices (default: 1, min: 1, max: 100)", sides="Number of sides (default: 6, min: 1, max: 100)")
 async def roll(interaction: discord.Interaction, amount: int = 1, sides: int = 6):
     if amount < 1 or amount > 100 or sides < 1 or sides > 100:
@@ -81,7 +86,7 @@ async def roll(interaction: discord.Interaction, amount: int = 1, sides: int = 6
     rolls = [random.randint(1, sides) for _ in range(amount)]
     total = sum(rolls)
     faces = " ".join(dice_faces[r] if sides <= 6 and r <= 6 else str(r) for r in rolls)
-    embed = discord.Embed(title="🎲 Let roll some dices!", color=discord.Colour.blue())
+    embed = discord.Embed(title=f"🎲 Let roll {amount} (1-{sides})dices!", color=discord.Colour.blue())
     embed.add_field(name="Results", value=faces)
     embed.add_field(name="Total", value=str(total))
     await interaction.response.send_message(embed=embed, view=DiceRerollButton(amount=amount, sides=sides))
@@ -129,5 +134,42 @@ class View(discord.ui.View):
 @client.tree.command(name="button", description="Displaying a button!", guild=TEST_GUILDS_ID)
 async def myButton(interaction: discord.Interaction):
     await interaction.response.send_message(view=View())
+    
+class Menu(discord.ui.Select):
+    def __init__(self):
+        options = [
+            discord.SelectOption(
+                label="Option 1",
+                description="This is option 1",
+                emoji="🔥"
+            ),
+            
+            discord.SelectOption(
+                label="Option 2",
+                description="This is option 2",
+                emoji="💀"
+            ),
+            
+            discord.SelectOption(
+                label="Option 3",
+                description="This is option 3",
+                emoji="😋"
+            )
+        ]
+        
+        super().__init__(placeholder="Please choose an option: ", min_values=1, max_values=1, options=options)
+        
+    async def callback(self, interaction: discord.Interaction):
+        if self.values[0] == "Option 1":
+            await interaction.response.send_message(f" YAY ! You picked {self.values[0]}")
+
+class MenuView(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.add_item(Menu())
+    
+@client.tree.command(name="menu", description="Displaying a dropdown menu!", guild=TEST_GUILDS_ID)
+async def myButton(interaction: discord.Interaction):
+    await interaction.response.send_message(view=MenuView())
 
 client.run(os.getenv("TOKEN"))
