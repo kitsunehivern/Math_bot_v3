@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from discord.ext import commands
 from discord import app_commands
 import random
+import asyncio
 
 load_dotenv()
 
@@ -92,9 +93,9 @@ async def roll(interaction: discord.Interaction, amount: int = 1, sides: int = 6
     await interaction.response.send_message(embed=embed, view=DiceRerollButton(amount=amount, sides=sides))
 
 
-@client.tree.command(name="hello", description="Say hello!", guild=TEST_GUILDS_ID)
-async def sayHello(interaction: discord.Interaction):
-    await interaction.response.send_message("Hi there!")
+# @client.tree.command(name="hello", description="Say hello!", guild=TEST_GUILDS_ID)
+# async def sayHello(interaction: discord.Interaction):
+#     await interaction.response.send_message("Hi there!")
     
 @client.tree.command(name="print", description="I will print whatever you give me!", guild=TEST_GUILDS_ID)
 async def printer(interaction: discord.Interaction, print: str):
@@ -172,4 +173,16 @@ class MenuView(discord.ui.View):
 async def myButton(interaction: discord.Interaction):
     await interaction.response.send_message(view=MenuView())
 
+async def main():
+    initial_extensions = []
+
+    for file_name in os.listdir('./cogs'):
+        if file_name.endswith('.py'):
+            initial_extensions.append("cogs." + file_name[:-3])
+            
+        for extension in initial_extensions:
+            await client.load_extension(extension)
+        
+if __name__ == "__main__":
+    asyncio.run(main())
 client.run(os.getenv("TOKEN"))
