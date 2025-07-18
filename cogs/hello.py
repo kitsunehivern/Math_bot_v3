@@ -1,9 +1,9 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
+from config import TEST_GUILDS_ID, GUILDS_ID
 
 
-TEST_GUILDS_ID = discord.Object(id=1066207532374294558)
 
 class Hello(commands.Cog):
     
