@@ -6,6 +6,7 @@ import random
 
 class DuelTest(commands.Cog):
     
+    #init the command
     def __init__(self, client):
         self.client = client
         
