@@ -38,3 +38,4 @@ winkerberos==0.12.2
 wmi==1.5.1
 xmlrpclib==1.0.1
 zstandard==0.25.0
+discord.py==2.5.2

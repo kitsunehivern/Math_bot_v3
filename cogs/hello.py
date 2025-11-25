@@ -11,7 +11,7 @@ class Hello(commands.Cog):
         self.client = client
     
     @app_commands.command(name="hello", description="Say hi!!!")
-    @app_commands.guilds(TEST_GUILDS_ID)
+    @app_commands.guilds(*TEST_GUILDS_ID)
     async def hello(self, interaction: discord.Interaction):
         await interaction.response.send_message("Hi there!")
     
